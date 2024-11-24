@@ -21,7 +21,7 @@ git clone https://github.com/canibrahimkoc/lab-control
 Lorem Ipsum is simply dummy text of the printing.
 
 ```bash
-chmod +x root.sh && ./install.sh
+chmod +x install.sh && ./install.sh
 ```
 
 #### 🔑 WSL
