@@ -1,0 +1,11 @@
+!*/
+!.gitignore
+!readme.md
+*.log
+*.DS_Store
+node_modules
+__pycache__
+venv
+*.deb
+pubspec.lock
+.dart_tool
