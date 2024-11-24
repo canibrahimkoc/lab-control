@@ -6,7 +6,6 @@ auto_install() {
     packages_python
     packages_dart
     # packages_php
-    packages_labs
     git_config
 }
 
