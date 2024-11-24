@@ -1,3 +1,20 @@
 [INFO] [1;37m[2024-11-24 19:42:54] Git deposu güncelleniyor...[0m
 [INFO] [1;37m[2024-11-24 19:42:54] Remote branch bulunamadı. İlk commit oluşturuluyor...[0m
 [INFO] [1;37m[2024-11-24 19:42:54] Git kullanıcı bilgileri ayarlanıyor...[0m
+[INFO] [main (root-commit) eeb2d0d] Initial commit
+[INFO] 10 files changed, 617 insertions(+)
+[INFO] create mode 100644 .env
+[INFO] create mode 100644 README.md
+[INFO] create mode 100644 backup/readme.md
+[INFO] create mode 100755 bin/backup.sh
+[INFO] create mode 100755 bin/github.sh
+[INFO] create mode 100644 bin/system.sh
+[INFO] create mode 100755 bin/tracker.sh
+[INFO] create mode 100644 logs/install.log
+[INFO] create mode 100644 logs/readme.md
+[INFO] create mode 100755 root.sh
+[INFO] To https://github.com/canibrahimkoc/lab-control.git
+[INFO] * [new branch]      main -> main
+[INFO] branch 'main' set up to track 'origin/main'.
+[INFO] [0;32m[2024-11-24 19:42:55] İlk commit başarıyla oluşturuldu ve gönderildi.[0m
+[INFO] [1;37m[2024-11-24 19:42:55] Yerel değişiklikler tespit edildi...[0m
