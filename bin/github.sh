@@ -1,19 +1,11 @@
-# /opt dizinindeki tüm Git projelerini işle
 all_git_update() {
     for dir in /opt/*/; do
         if [ -d "$dir" ] && [ -d "$dir/.git" ]; then
             project_name=$(basename "$dir")
             echo "Processing project: $project_name"
-            
-            # Proje dizinine geç
             cd "$dir"
-            
-            # git_update fonksiyonunu çağır
             git_update
-            
-            # Ana dizine geri dön
             cd - > /dev/null
-            
             echo "Finished processing: $project_name"
             echo "----------------------------------------"
         fi

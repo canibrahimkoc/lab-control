@@ -1,4 +1,5 @@
 auto_install() {
+    system_update
     system_config
     packages_tools
     packages_typeScript
@@ -21,8 +22,8 @@ system_update() {
 
 system_config() {
     # [ ! -f /etc/resolv.conf ] && echo -e "nameserver 1.1.1.1" > /etc/resolv.conf || sed -i '/^nameserver /d' /etc/resolv.conf && echo -e "nameserver 1.1.1.1" >> /etc/resolv.conf
-    grep -q "^\s*alias ck=" ~/.bashrc || echo "alias ck='/lab-control/root.sh'" >> ~/.bashrc || true
-    grep -q "^\s*alias CK=" ~/.bashrc || echo "alias CK='/lab-control/root.sh'" >> ~/.bashrc || true
+    grep -q "^\s*alias lab=" ~/.bashrc || echo "alias lab='/opt/lab-control/install.sh'" >> ~/.bashrc || true
+    # grep -q "^\s*alias lab git=" ~/.bashrc || echo "alias lab git='bash -c \"/opt/lab-control/bin/github.sh all_git_update\"'" >> ~/.bashrc || true
     # grep -q "^\s*alias git-update=" ~/.bashrc || echo "alias git-update='for d in /opt/*; do [ -f \"\$d/update.sh\" ] && cd \$d && bash \"\$d/update.sh\"; done'" >> ~/.bashrc
     grep -q "^\s*alias logs=" ~/.bashrc || echo "alias logs='journalctl -f'" >> ~/.bashrc
     grep -q "^\s*alias services=" ~/.bashrc || echo "alias services='for service in /etc/systemd/system/multi-user.target.wants/*.service; do echo -e \"\\n--- \$(basename \$service) ---\"; systemctl status --no-pager \$(basename \$service); sleep 0.5; done'" >> ~/.bashrc

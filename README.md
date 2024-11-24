@@ -1,4 +1,4 @@
-## CK
+## Lab. Control
 
 Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum is simply dummy text of the printing and typesetting industry.
 
@@ -6,6 +6,7 @@ Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem
 - Npm >= 10.9
 - Python >= 3.11
 - Dart >= 3.5
+- Php 
 
 <hr>
 
@@ -14,27 +15,50 @@ Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem
 Lorem Ipsum is simply dummy text of the printing and typesetting industry.
 
 ```bash
-  git clone git@github.com:canibrahimkoc/CK.git /ck
+git clone https://github.com/canibrahimkoc/lab-control
 ```
 
 Lorem Ipsum is simply dummy text of the printing.
 
 ```bash
-  chmod +x ck.sh && ./ck.sh
+chmod +x root.sh && ./install.sh
 ```
 
 Lorem Ipsum is simply dummy text of the printing.
 
 ```bash
-  ck
+  lab
 ```
+#### 🔑 WSL
+
+Lorem Ipsum is simply dummy text of the printing and typesetting industry.
+
+```bash
+wsl --shutdown; wsl --unregister Debian; wsl --install -d Debian
+wsl --setdefault Debian; wsl -d Debian
+```
+Lorem Ipsum is simply dummy text of the printing and typesetting industry.
+```bash
+echo -e "[interop]\nenabled = false\nappendWindowsPath = false\n\n[user]\ndefault = root\n\n[boot]\nsystemd = true" | sudo tee /etc/wsl.conf > /dev/null
+```
+Lorem Ipsum is simply dummy text of the printing and typesetting industry.
+
+```bash
+wsl --shutdown; wsl -d Debian --cd /opt -- systemctl status
+```
+Lorem Ipsum is simply dummy text of the printing and typesetting industry.
+
+```bash
+apt-get install -y bash git && it clone https://github.com/canibrahimkoc/lab-control opt/lab-control && cd /opt/lab-control && chmod +x install.sh && ./install.sh
+```
+Lorem Ipsum is simply dummy text of the printing and typesetting industry.
 
 #### 📦 Build
 
 Lorem Ipsum is simply dummy text of the printing and typesetting industry.
 
 ```bash
-  sudo merv build
+  sudo lab build
 ```
 
 #### 🔄 Update
@@ -42,7 +66,7 @@ Lorem Ipsum is simply dummy text of the printing and typesetting industry.
 Lorem Ipsum is simply dummy text of the printing and typesetting industry.
 
 ```bash
-  sudo merv update
+  sudo lab update
 ```
 
 #### 🛡️ Backup
@@ -50,15 +74,7 @@ Lorem Ipsum is simply dummy text of the printing and typesetting industry.
 Lorem Ipsum is simply dummy text of the printing and typesetting industry.
 
 ```bash
-  wsl --export Debian "D:\wsl-backup\debian_backup_$(Get-Date -Format yyyyMMdd).tar"
-```
-
-#### 🔑 Tunnel
-
-Lorem Ipsum is simply dummy text of the printing and typesetting industry.
-
-```bash
-  sudo merv tunnel
+sudo lab backup
 ```
 
 #### 🗑️ Uninstall
@@ -66,7 +82,7 @@ Lorem Ipsum is simply dummy text of the printing and typesetting industry.
 Lorem Ipsum is simply dummy text of the printing and typesetting industry.
 
 ```bash
-  sudo merv uninstall
+sudo lab remove
 ```
 
 #### 📋 Contributing
@@ -80,15 +96,3 @@ Lorem Ipsum is simply dummy text of the printing and 'typesetting industry'. It 
 &nbsp;⣿⡟⢻⣿⣿⣿⡟⢻⣿  </br>
 &nbsp;⢻⣿⣿⣟⠿⣻⣿⣿⡟  </br>
 &nbsp;⠀⠙⠻⠷⠿⠾⠟⠋
-
-
-# WSL Config
-wsl --shutdown; wsl --unregister Debian; wsl --install -d Debian
-wsl --setdefault Debian; wsl -d Debian
-echo -e "[interop]\nenabled = false\nappendWindowsPath = false\n\n[user]\ndefault = root\n\n[boot]\nsystemd = true" | sudo tee /etc/wsl.conf > /dev/null
-wsl --shutdown; wsl -d Debian
-cd ~ && systemctl status
-apt-get install -y bash git && it clone https://github.com/canibrahimkoc/lab-control opt/lab-control && cd /opt/lab-control && chmod +x root.sh && ./root.sh
-
-# SSH
-ssh-keygen -t rsa -b 4096; type $env:USERPROFILE\.ssh\id_rsa.pub | ssh -o StrictHostKeyChecking=no root@IP "mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys"; del %USERPROFILE%\.ssh\id_rsa.pub;

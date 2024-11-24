@@ -65,3 +65,25 @@
 [INFO] [1;37m[2024-11-24 19:43:17] Git deposu güncelleniyor...[0m
 [INFO] [1;37m[2024-11-24 19:43:17] Remote değişiklikler kontrol ediliyor...[0m
 [INFO] [1;37m[2024-11-24 19:43:18] Yerel değişiklikler tespit edildi...[0m
+[INFO] Processing project: ck-works
+[INFO] [1;37m[2024-11-24 20:06:39] Git deposu güncelleniyor...[0m
+[INFO] [1;37m[2024-11-24 20:06:40] Remote değişiklikler kontrol ediliyor...[0m
+[INFO] [0;32m[2024-11-24 20:06:40] Yerel değişiklik yok. Mevcut versiyon: ck-works > v0.0.2[0m
+[INFO] Finished processing: ck-works
+[INFO] ----------------------------------------
+[INFO] Processing project: dev-lab
+[INFO] [1;37m[2024-11-24 20:06:40] Git deposu güncelleniyor...[0m
+[INFO] [1;37m[2024-11-24 20:06:41] Remote değişiklikler kontrol ediliyor...[0m
+[INFO] [0;32m[2024-11-24 20:06:41] Yerel değişiklik yok. Mevcut versiyon: dev-lab > v0.0.2[0m
+[INFO] Finished processing: dev-lab
+[INFO] ----------------------------------------
+[INFO] Processing project: felinance-api
+[INFO] [1;37m[2024-11-24 20:06:41] Git deposu güncelleniyor...[0m
+[INFO] [1;37m[2024-11-24 20:06:43] Remote değişiklikler kontrol ediliyor...[0m
+[INFO] [0;32m[2024-11-24 20:06:45] Yerel değişiklik yok. Mevcut versiyon: felinance-api > v0.2.2[0m
+[INFO] Finished processing: felinance-api
+[INFO] ----------------------------------------
+[INFO] Processing project: lab-control
+[INFO] [1;37m[2024-11-24 20:06:45] Git deposu güncelleniyor...[0m
+[INFO] [1;37m[2024-11-24 20:06:45] Remote değişiklikler kontrol ediliyor...[0m
+[INFO] [1;37m[2024-11-24 20:06:46] Yerel değişiklikler tespit edildi...[0m
