@@ -18,3 +18,50 @@
 [INFO] branch 'main' set up to track 'origin/main'.
 [INFO] [0;32m[2024-11-24 19:42:55] İlk commit başarıyla oluşturuldu ve gönderildi.[0m
 [INFO] [1;37m[2024-11-24 19:42:55] Yerel değişiklikler tespit edildi...[0m
+[INFO] [main 6e628ce] v0.0.1
+[INFO] 1 file changed, 17 insertions(+)
+[INFO] To https://github.com/canibrahimkoc/lab-control.git
+[INFO] eeb2d0d..6e628ce  main -> main
+[INFO] Processing project: ck-works
+[INFO] [1;37m[2024-11-24 19:43:02] Git deposu güncelleniyor...[0m
+[INFO] [1;37m[2024-11-24 19:43:02] Remote değişiklikler kontrol ediliyor...[0m
+[INFO] [1;37m[2024-11-24 19:43:03] Yerel değişiklikler tespit edildi...[0m
+[INFO] [main 295174d] v0.0.1
+[INFO] 7 files changed, 12556 insertions(+), 11980 deletions(-)
+[INFO] delete mode 100755 install.sh
+[INFO] delete mode 100755 update.sh
+[INFO] To https://github.com/canibrahimkoc/ck-works
+[INFO] 5132df6..295174d  main -> main
+[INFO] [0;32m[2024-11-24 19:43:09] Değişiklikler başarıyla gönderildi. Yeni versiyon: ck-works > v0.0.1[0m
+[INFO] Finished processing: ck-works
+[INFO] ----------------------------------------
+[INFO] Processing project: dev-lab
+[INFO] [1;37m[2024-11-24 19:43:09] Git deposu güncelleniyor...[0m
+[INFO] [1;37m[2024-11-24 19:43:10] Remote değişiklikler kontrol ediliyor...[0m
+[INFO] [1;37m[2024-11-24 19:43:10] Yerel değişiklikler tespit edildi...[0m
+[INFO] [main 3175cd3] v0.0.1
+[INFO] 3 files changed, 220 deletions(-)
+[INFO] create mode 100644 README.md
+[INFO] delete mode 100755 install.sh
+[INFO] delete mode 100755 update.sh
+[INFO] To https://github.com/canibrahimkoc/dev-lab
+[INFO] 7b8af4e..3175cd3  main -> main
+[INFO] [0;32m[2024-11-24 19:43:11] Değişiklikler başarıyla gönderildi. Yeni versiyon: dev-lab > v0.0.1[0m
+[INFO] Finished processing: dev-lab
+[INFO] ----------------------------------------
+[INFO] Processing project: felinance-api
+[INFO] [1;37m[2024-11-24 19:43:11] Git deposu güncelleniyor...[0m
+[INFO] [1;37m[2024-11-24 19:43:13] Remote değişiklikler kontrol ediliyor...[0m
+[INFO] [1;37m[2024-11-24 19:43:15] Yerel değişiklikler tespit edildi...[0m
+[INFO] [main cc4104d] v0.2.1
+[INFO] 1 file changed, 104 deletions(-)
+[INFO] delete mode 100755 update.sh
+[INFO] To github.com:canibrahimkoc/felinance-api.git
+[INFO] 5052267..cc4104d  main -> main
+[INFO] [0;32m[2024-11-24 19:43:17] Değişiklikler başarıyla gönderildi. Yeni versiyon: felinance-api > v0.2.1[0m
+[INFO] Finished processing: felinance-api
+[INFO] ----------------------------------------
+[INFO] Processing project: lab-control
+[INFO] [1;37m[2024-11-24 19:43:17] Git deposu güncelleniyor...[0m
+[INFO] [1;37m[2024-11-24 19:43:17] Remote değişiklikler kontrol ediliyor...[0m
+[INFO] [1;37m[2024-11-24 19:43:18] Yerel değişiklikler tespit edildi...[0m
