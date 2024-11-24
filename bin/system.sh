@@ -1,25 +1,31 @@
 auto_install() {
-    system_update
-    system_config
-    packages_tools
-    packages_typeScript
-    packages_python
-    packages_dart
-    # packages_php
-    git_config
+    update
+    config
+    alias
+    tools
+    typescript
+    python
+    dart
+    # phpfpm
+    github
 }
 
-system_update() {
+update() {
     apt update -y 
     apt upgrade -y 
     apt dist-upgrade -y
     apt autoremove -y 
     apt clean 
     apt autoclean
-    source ~/.bashrc || true
+    source ~/.bashrc
 }
 
-system_config() {
+config() {
+    # [ ! -f /etc/resolv.conf ] && echo -e "nameserver 1.1.1.1" > /etc/resolv.conf || sed -i '/^nameserver /d' /etc/resolv.conf && echo -e "nameserver 1.1.1.1" >> /etc/resolv.conf
+    source ~/.bashrc
+}
+
+alias() {
     # [ ! -f /etc/resolv.conf ] && echo -e "nameserver 1.1.1.1" > /etc/resolv.conf || sed -i '/^nameserver /d' /etc/resolv.conf && echo -e "nameserver 1.1.1.1" >> /etc/resolv.conf
     grep -q "^\s*alias lab=" ~/.bashrc || echo "alias lab='/opt/lab-control/install.sh'" >> ~/.bashrc || true
     # grep -q "^\s*alias lab git=" ~/.bashrc || echo "alias lab git='bash -c \"/opt/lab-control/bin/github.sh all_git_update\"'" >> ~/.bashrc || true
@@ -29,23 +35,7 @@ system_config() {
     source ~/.bashrc
 }
 
-git_config() {
-    git config --global --get http.proxy
-    git config --global pull.rebase false
-    git config --global user.name "root"
-    git config --global user.email "git@github.com"
-    mkdir -p ~/.ssh 
-    chmod 700 ~/.ssh 
-    yes n | ssh-keygen -t rsa -b 4096 -N "" -f ~/.ssh/id_rsa 
-    chmod 600 ~/.ssh/id_rsa 
-    cat /root/.ssh/id_rsa.pub 
-    rm -r /root/.ssh/id_rsa.pub 
-    ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts 
-    ssh -T git@github.com || true
-    source ~/.bashrc || true
-}
-
-packages_tools() {
+tools() {
     apt-get install -y bash || true
     apt-get install -y sudo || true
     apt-get install -y openssl || true
@@ -104,7 +94,7 @@ packages_tools() {
     source ~/.bashrc || true
 }
 
-packages_typeScript() {
+typescript() {
     if ! command -v node &>/dev/null; then
         curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | bash
         . ~/.nvm/nvm.sh
@@ -119,7 +109,7 @@ packages_typeScript() {
     fi
 }
 
-packages_python() {
+python() {
     if ! command -v python3.11 &>/dev/null; then
         curl https://pyenv.run | bash
         echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc
@@ -137,7 +127,7 @@ packages_python() {
     fi
 }
 
-packages_dart() {
+dart() {
     if ! command -v dart &>/dev/null; then
         sudo apt-get update && sudo apt-get install -y apt-transport-https
         sudo wget -qO- https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo gpg --dearmor -o /usr/share/keyrings/dart.gpg
@@ -150,7 +140,7 @@ packages_dart() {
     fi
 }
 
-packages_php() {
+php-fpm() {
     if ! command -v php &>/dev/null; then
         sudo apt-get install -y php8.2-fpm php8.2-bcmath php8.2-curl php8.2-intl php8.2-mbstring php8.2-imagick php8.2-xml php8.2-zip php8.2-opcache php8.2-redis php8.2-mysqlnd
         sudo systemctl enable --now php8.2-fpm
@@ -159,5 +149,25 @@ packages_php() {
         echo "PHP is already installed:"
         php -v
         php -m
+    fi
+}
+
+github() {
+    if [ ! -f ~/.ssh/id_rsa ]; then
+        git config --global pull.rebase false
+        git config --global user.name "root"
+        git config --global user.email "git@github.com"
+        mkdir -p ~/.ssh && chmod 700 ~/.ssh
+        yes n | ssh-keygen -t rsa -b 4096 -N "" -f ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        cat ~/.ssh/id_rsa.pub || true
+        rm -r ~/.ssh/id_rsa.pub || true
+        ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts || true
+        ssh -T git@github.com || true
+        source ~/.bashrc || true
+    else
+        echo "Git is already installed"
+        ssh -T git@github.com || true
+        git --version
     fi
 }

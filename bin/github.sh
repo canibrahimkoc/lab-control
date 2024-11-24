@@ -115,27 +115,29 @@ git_update() {
     fi
 }
 
+git_restore() {
+    git rm -r --cached /ck && rm -f .git/index && git reset
+}
 
 git_clone() {
     local repos=(
-        #"ck-works"
-        #"merovingian-ai"
+        "ck-works"
+        "dev-lab"
+        "not-found"
+        "merovingian-ai"
+        "felinance-api"
     )
 
     for repo in "${repos[@]}"; do
         if [ ! -d "/opt/$repo" ]; then
             echo "Cloning $repo..."
             git clone "git@github.com:canibrahimkoc/$repo.git" "/opt/$repo"
-            if [ -f "/opt/$repo/install.sh" ]; then
-                echo "Running install script for $repo..."
-                cd "/opt/$repo" && chmod +x install.sh && ./install.sh
-            fi
+            # if [ -f "/opt/$repo/install.sh" ]; then
+            #     echo "Running install script for $repo..."
+            #     cd "/opt/$repo" && chmod +x install.sh && ./install.sh
+            # fi
         else
             echo "$repo already exists in /opt/. Skipping..."
         fi
     done
-}
-
-git_restore() {
-    git rm -r --cached /ck && rm -f .git/index && git reset
 }
