@@ -6,7 +6,7 @@ Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem
 - Npm >= 10.9
 - Python >= 3.11
 - Dart >= 3.5
-- Php 
+- Php  >= 8.2
 
 <hr>
 
@@ -24,11 +24,6 @@ Lorem Ipsum is simply dummy text of the printing.
 chmod +x root.sh && ./install.sh
 ```
 
-Lorem Ipsum is simply dummy text of the printing.
-
-```bash
-  lab
-```
 #### 🔑 WSL
 
 Lorem Ipsum is simply dummy text of the printing and typesetting industry.
@@ -49,9 +44,16 @@ wsl --shutdown; wsl -d Debian --cd /opt -- systemctl status
 Lorem Ipsum is simply dummy text of the printing and typesetting industry.
 
 ```bash
-apt-get install -y bash git && it clone https://github.com/canibrahimkoc/lab-control opt/lab-control && cd /opt/lab-control && chmod +x install.sh && ./install.sh
+apt-get install -y bash git && git clone https://github.com/canibrahimkoc/lab-control /opt/lab-control && cd /opt/lab-control && chmod +x install.sh && ./install.sh
 ```
+
+#### 📦 Control
+
 Lorem Ipsum is simply dummy text of the printing and typesetting industry.
+
+```bash
+  sudo lab
+```
 
 #### 📦 Build
 
