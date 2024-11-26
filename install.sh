@@ -1,7 +1,19 @@
 #!/bin/bash
 set -euo pipefail
+
 BASE_DIR="$(dirname "$(realpath "$0")")"
-cd "$BASE_DIR" && source ~/.bashrc || true
+cd "$BASE_DIR" || exit 1
+
+if [ -f ".env" ]; then
+    set -a
+    source .env
+    set +a
+else
+    echo "Error: .env file not found."
+    exit 1
+fi
+
+source ~/.bashrc || true
 
 log() {
     local level="$1"
