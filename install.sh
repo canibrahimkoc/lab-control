@@ -18,7 +18,7 @@ source ~/.bashrc || true
 log() {
     local level="$1"
     local message="$2"
-    echo -e "[$level] $message" | tee -a "$log_dir/install.log"
+    echo -e "[$level] $message" | tee -a "$BASE_DIR/logs/install.log"
 }
 
 declare -A COLORS=(
