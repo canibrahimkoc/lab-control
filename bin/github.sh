@@ -1,10 +1,10 @@
 # Function to update repositories
 update() {
-    for repo in "${gitUPDATE[@]}"; do
-        if [ -d "${gitREPO}/${repo}" ] && [ -d "${gitREPO}/${repo}/.git" ]; then
+    for repo in "${git_update[@]}"; do
+        if [ -d "${git_repo}/${repo}" ] && [ -d "${git_repo}/${repo}/.git" ]; then
             project_name=$(basename "$repo")
             echo "Processing project: $project_name"
-            cd "${gitREPO}/${repo}" || continue
+            cd "${git_repo}/${repo}" || continue
             remote_url=$(git config --get remote.origin.url || echo "")
             remote_title=$(basename "$(git rev-parse --show-toplevel)")
 
@@ -112,34 +112,34 @@ update() {
             echo "Finished processing: $project_name"
             echo "----------------------------------------"
         else
-            echo "Error: ${gitREPO}/${repo} is not a valid Git repository."
+            echo "Error: ${git_repo}/${repo} is not a valid Git repository."
         fi
     done
 }
 
 # Function to clone repositories
 clone() {
-    for repo in "${gitCLONE[@]}"; do
-        if [ ! -d "/opt/$repo" ]; then
+    for repo in "${git_clone[@]}"; do
+        if [ ! -d "$git_repo/$repo" ]; then
             echo "Cloning $repo..."
-            git clone "git@github.com:canibrahimkoc/$repo.git" "/opt/$repo"
+            git clone "git@github.com:canibrahimkoc/$repo.git" "$git_repo/$repo"
             echo "$repo cloned successfully."
         else
-            echo "$repo already exists in /opt/. Skipping..."
+            echo "$repo already exists in $git_repo/. Skipping..."
         fi
     done
 }
 
 # Function to clean repositories
 restore() {
-    for repo in "${gitRESTORE[@]}"; do
+    for repo in "${git_restore[@]}"; do
         echo "Cleaning $repo..."
-        if [ -d "/opt/$repo" ]; then
-            cd "/opt/$repo" || continue
-            rm -rf package-lock.json node_modules .wrangler .vercel .next .contentlayer
+        if [ -d "$git_repo/$repo" ]; then
+            cd "$git_repo/$repo" || continue
+            rm -rf $cacheRestore
             echo "$repo cleaned successfully."
         else
-            echo "Error: Directory /opt/$repo not found."
+            echo "Error: Directory $git_repo/$repo not found."
         fi
     done
 }
