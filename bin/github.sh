@@ -117,7 +117,6 @@ git_restore() {
             find . -type d \( -name "node_modules" -o -name ".next" -o -name ".turbo" -o -name ".wrangler" -o -name ".vercel" -o -name ".contentlayer" \) -exec rm -rf {} +
             # find . -type d \( -name ".git" -o -name ".github" \) -exec rm -rf {} +
             # find . -type f -name ".gitignore" -exec rm -f {} +
-            # find . -type f -name ".dockerignore" -exec rm -f {} +
             find . -type f -name "package-lock.json" -exec rm -f {} +
             echo "$repo cleaned successfully."
         else
