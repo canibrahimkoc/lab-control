@@ -91,7 +91,7 @@ tools() {
     apt-get install -y python3-venv || true
     apt-get install -y python3-pip -y || true
     sudo ldconfig
-    source ~/.bashrc || true
+    source ~/.bashrc
 }
 
 typescript() {
