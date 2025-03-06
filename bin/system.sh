@@ -91,14 +91,14 @@ tools() {
     apt-get install -y python3-venv || true
     apt-get install -y python3-pip -y || true
     sudo ldconfig
-    source ~/.bashrc
+    source ~/.bashrc || true
 }
 
 typescript() {
     if ! command -v node &>/dev/null; then
         curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | bash
         . ~/.nvm/nvm.sh
-        nvm install 18
+        # nvm install 18
         nvm install 20
         npm install -g npm pnpm yarn nodemon
         echo 'export NODE_OPTIONS="--max-old-space-size=32096"' >> ~/.bashrc
