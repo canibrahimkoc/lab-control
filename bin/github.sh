@@ -117,8 +117,30 @@ git_restore() {
             find . -type d \( -name "node_modules" -o -name ".next" -o -name ".turbo" -o -name ".wrangler" -o -name ".vercel" -o -name ".contentlayer" \) -exec rm -rf {} +
             # find . -type d \( -name ".git" -o -name ".github" \) -exec rm -rf {} +
             # find . -type f -name ".gitignore" -exec rm -f {} +
-            find . -type f -name "package-lock.json" -exec rm -f {} +
+            # find . -type f -name "package-lock.json" -exec rm -f {} +
             echo "$repo cleaned successfully."
+        else
+            echo "Error: Directory $git_dir/$repo not found."
+        fi
+    done
+}
+
+git_syc() {
+    for repo in "${git_syc[@]}"; do
+        echo "Cleaning $repo..."
+        if [ -d "$git_dir/$repo" ]; then
+            cd "$git_dir/$repo" || continue
+            rsync -av --update /opt/supabase/apps/www/* /opt/ck-works/
+            rsync -av --update /opt/supabase/packages/* /opt/ck-works/packages/
+            rm -rf /opt/ck-works/app \
+            /opt/ck-works/pages/changelog.tsx \
+            /opt/ck-works/pages/launch-week/7 \
+            /opt/ck-works/pages/launch-week/8 \
+            /opt/ck-works/pages/launch-week/x \
+            /opt/ck-works/pages/launch-week/tickets \
+            /opt/ck-works/pages/partners/[slug].tsx \
+            /opt/ck-works/pages/partners/integrations/[slug].tsx
+            echo "$repo Syc successfully."
         else
             echo "Error: Directory $git_dir/$repo not found."
         fi
