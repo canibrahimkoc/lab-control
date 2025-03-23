@@ -130,8 +130,9 @@ git_syc() {
         echo "Cleaning $repo..."
         if [ -d "$git_dir/$repo" ]; then
             cd "$git_dir/$repo" || continue
-            rsync -av --update /opt/supabase/apps/www/* /opt/ck-works/
-            rsync -av --update /opt/supabase/packages/ /opt/ck-works/packages/
+            rsync -av --checksum /opt/supabase/apps/www/* /opt/ck-works/
+            rsync -av --checksum /opt/supabase/packages/ /opt/ck-works/packages/
+            
             rm -rf /opt/ck-works/app \
             /opt/ck-works/pages/changelog.tsx \
             /opt/ck-works/pages/launch-week/7 \
