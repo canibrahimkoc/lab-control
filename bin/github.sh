@@ -1,84 +1,75 @@
 #!/bin/bash
 
-# Değişkenlerin tanımlı olduğundan emin olun (Örn: .env veya main script'ten gelir)
-git_dir="${git_dir:-/opt/lab-control}"
+# --- Özel Yardımcı Fonksiyonlar (Menüde görünmezler) ---
+_load_env() {
+    local base_dir
+    base_dir="$(dirname "$(realpath "$0")")"
+    [[ -f "$base_dir/.env" ]] && source "$base_dir/.env" || { [[ -f "./.env" ]] && source "./.env"; }
+}
+
+_status_msg() {
+    local color=$1 msg=$2
+    case $color in
+        "green")  echo -e "\e[0;32m[✓] $msg\e[0m" ;;
+        "red")    echo -e "\e[0;31m[X] $msg\e[0m" ;;
+        "yellow") echo -e "\e[0;33m[!] $msg\e[0m" ;;
+        "blue")   echo -e "\e[0;34m[i] $msg\e[0m" ;;
+    esac
+}
+
+# --- Dashboard Menüsünde Görünecek Fonksiyonlar ---
 
 git_update() {
-    # 1. ENV Dosyasını ve Dizileri Zorla Yükle
-    # Scriptin çalıştığı klasörü bul ve .env'i çek
-    local current_dir="$(dirname "$(realpath "$0")")"
-    if [ -f "$current_dir/.env" ]; then
-        source "$current_dir/.env"
-    elif [ -f "./.env" ]; then
-        source "./.env"
-    fi
+    _load_env
+    local target_dir="${git_dir:-/opt}"
+    [[ ${#git_update[@]} -eq 0 ]] && { _status_msg "red" "git_update array is empty"; return 1; }
 
-    # 2. Dizi Kontrolü (Hata ayıklama için echo eklendi)
-    if [[ ${#git_update[@]} -eq 0 ]]; then
-        echo "[!] ERROR: git_update array is still empty!"
-        echo "Current dir: $(pwd)"
-        return 1
-    fi
-
-    # 3. Döngüye Başla
     for repo in "${git_update[@]}"; do
-        target_path="${git_dir}/${repo}"
-        
-        if [ -d "$target_path/.git" ]; then
-            echo ">>> Updating: $repo"
-            cd "$target_path" || continue
-            
-            # Git işlemlerini yap
+        local path="$target_dir/$repo"
+        echo -e "\n\e[1;34m>>> Repository: $repo\e[0m"
+        if [[ -d "$path/.git" ]]; then
+            cd "$path" || continue
             git fetch --all --prune --quiet
-            current_branch=$(git symbolic-ref --short HEAD 2>/dev/null || echo "main")
+            local branch=$(git symbolic-ref --short HEAD 2>/dev/null || echo "main")
             
-            # Otomatik Commit Mantığı
             if [[ -n $(git status --porcelain) ]]; then
-                echo " [+] Local changes found in $repo, committing..."
-                git add .
-                git commit -m "Auto-update $(date '+%Y-%m-%d %H:%M')" --quiet
+                _status_msg "yellow" "Auto-committing local changes..."
+                git add . && git commit -m "Auto-sync: $(date '+%Y-%m-%d %H:%M')" --quiet
             fi
 
-            # Sync
-            echo " [↑] Syncing $current_branch..."
-            git pull origin "$current_branch" --rebase --quiet
-            if git push origin "$current_branch" 2>&1; then
-                echo " [✓] $repo updated successfully."
+            _status_msg "blue" "Syncing $branch..."
+            if git pull origin "$branch" --rebase --quiet && git push origin "$branch" --quiet; then
+                _status_msg "green" "Success."
             else
-                echo " [X] $repo push failed (Check SSH/Permissions)."
+                _status_msg "red" "Sync failed."
             fi
-            
             cd - > /dev/null
-        else
-            echo " [!] Skipping: $repo (Not a git repository at $target_path)"
         fi
-        echo "----------------------------------------"
     done
 }
+
 git_clone() {
+    _load_env
+    local target_dir="${git_dir:-/opt}"
     for repo in "${git_clone[@]}"; do
-        if [ ! -d "$git_dir/$repo" ]; then
-            echo " [→] Cloning $repo..."
-            mkdir -p "$git_dir"
-            git clone "git@github.com:canibrahimkoc/$repo.git" "$git_dir/$repo"
+        if [[ ! -d "$target_dir/$repo" ]]; then
+            _status_msg "blue" "Cloning $repo..."
+            git clone "git@github.com:canibrahimkoc/$repo.git" "$target_dir/$repo" && _status_msg "green" "Done."
         else
-            echo " [i] $repo already exists. Skipping clone."
+            _status_msg "yellow" "$repo exists. Skipped."
         fi
     done
 }
 
 git_restore() {
+    _load_env
+    local target_dir="${git_dir:-/opt}"
     for repo in "${git_restore[@]}"; do
-        target_path="$git_dir/$repo"
-        if [ -d "$target_path" ]; then
-            echo " [!] Cleaning build artifacts in $repo..."
-            cd "$target_path" || continue
-            # Kritik olmayan klasörleri temizle
-            rm -rf node_modules .next .turbo .wrangler .vercel .contentlayer
-            echo " [✓] $repo cleaned."
-            cd - > /dev/null
-        else
-            echo " [X] Error: Directory $target_path not found."
+        local path="$target_dir/$repo"
+        if [[ -d "$path" ]]; then
+            _status_msg "yellow" "Cleaning $repo..."
+            cd "$path" && rm -rf node_modules .next .turbo .wrangler .vercel dist build && cd - > /dev/null
+            _status_msg "green" "Cleaned."
         fi
     done
 }

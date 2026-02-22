@@ -44,7 +44,7 @@ execute_function() {
     local func=$selected_function
     echo -e "\n[$(date '+%Y-%m-%d %H:%M:%S')] START: $func" >> "$LOG_FILE"
 
-    # Background execution with IO redirection
+    # Arka planda çalıştırma ve çıktı yönlendirme
     $func >> "$LOG_FILE" 2>&1 &
     local f_pid=$!
     
@@ -73,20 +73,31 @@ display_header() {
 }
 
 load_menu_options() {
-    grep -E '^[a-zA-Z0-9_-]+\(\)' "$1" | sed 's/().*//' | \
-    grep -vE '^(msg|echo_color|failure|display_spinner|execute_function)$'
+    # DEĞİŞİKLİK BURADA: 
+    # 1. Sadece harf/rakamla başlayan fonksiyonları al ( ^[a-zA-Z0-9] )
+    # 2. Alt çizgi (_) ile başlayan yardımcı fonksiyonları gizle
+    grep -E '^[a-zA-Z0-9][a-zA-Z0-9_-]*\(\)' "$1" | sed 's/().*//' | \
+    grep -vE '^(msg|echo_color|failure|display_spinner|execute_function|main_menu|submenu|display_header|load_menu_options)$'
 }
 
 submenu() {
     local setup_file="$1"
     local title=$(basename "$setup_file" .sh)
+    
+    # Modülü içe aktar
     source "$setup_file"
     
     while true; do
         display_header
         msg BLUE "${COLORS[BOLD]}$title Module Operations:"
+        
+        # Seçenekleri dinamik yükle
         local options=($(load_menu_options "$setup_file"))
         
+        if [ ${#options[@]} -eq 0 ]; then
+            msg YELLOW "No public functions found in this module."
+        fi
+
         for i in "${!options[@]}"; do
             msg BOLD "$((i+1)). ${options[i]}"
         done
@@ -107,14 +118,23 @@ submenu() {
 }
 
 main_menu() {
+    # .env varsa yükle
     [[ -f ".env" ]] && { set -a; source .env; set +a; }
 
     while true; do
         display_header
         msg BLUE "${COLORS[BOLD]}Main Categories:"
+        
+        # bin/ klasöründeki modülleri bul
+        if [ ! -d "$BASE_DIR/bin" ]; then
+            mkdir -p "$BASE_DIR/bin"
+        fi
+        
         local menu_files=($(find "$BASE_DIR/bin" -maxdepth 1 -name "*.sh" | sort))
         
-        [[ ${#menu_files[@]} -eq 0 ]] && msg YELLOW "Warning: No .sh files found in bin/."
+        if [[ ${#menu_files[@]} -eq 0 ]]; then
+            msg YELLOW "Warning: No .sh files found in bin/."
+        fi
 
         for i in "${!menu_files[@]}"; do
             msg BOLD "$((i+1)). $(basename "${menu_files[i]}" .sh)"
@@ -132,5 +152,5 @@ main_menu() {
     done
 }
 
-# Start Dashboard
+# Dashboard'u Başlat
 main_menu
