@@ -1,156 +1,136 @@
 #!/bin/bash
+# Lab Control Dashboard - Core Engine
 set -euo pipefail
 
+# --- 1. GLOBAL SETTINGS & LOGGING ---
 BASE_DIR="$(dirname "$(realpath "$0")")"
-cd "$BASE_DIR" || exit 1
+LOG_DIR="$BASE_DIR/logs"
+LOG_FILE="$LOG_DIR/install.log"
+mkdir -p "$LOG_DIR"
 
-if [ -f ".env" ]; then
-    set -a
-    source .env
-    set +a
-else
-    echo "Error: .env file not found."
+# Hata yakalama (Failure Trace)
+failure() {
+    local lineno=$1 cmd=$2
+    [[ -n "${spinner_pid:-}" ]] && kill "$spinner_pid" 2>/dev/null || true
+    echo -e "\n\033[0;31m[!] CRITICAL ERROR at line $lineno: '$cmd' failed.\033[0m"
+    echo -e "\033[0;33mLast 10 log entries ($LOG_FILE):\033[0m"
+    tail -n 10 "$LOG_FILE"
     exit 1
-fi
-
-source ~/.bashrc || true
-
-log() {
-    local level="$1"
-    local message="$2"
-    echo -e "[$level] $message" | tee -a "$BASE_DIR/logs/install.log"
 }
+trap 'failure ${LINENO} "$BASH_COMMAND"' ERR
 
-declare -A COLORS=(
-    [RED]='\033[0;31m'
-    [GREEN]='\033[0;32m'
-    [YELLOW]='\033[0;33m'
-    [BLUE]='\033[0;34m'
-    [MAGENTA]='\033[0;35m'
-    [CYAN]='\033[0;36m'
-    [WHITE]='\033[0;37m'
-    [ORANGE]='\033[38;5;208m'
-    [BOLD]='\033[1m'
-    [NC]='\033[0m'
-)
+# --- 2. UI TOOLS ---
+declare -A COLORS=( [RED]='\033[0;31m' [GREEN]='\033[0;32m' [YELLOW]='\033[0;33m' 
+                    [BLUE]='\033[0;34m' [CYAN]='\033[0;36m' [BOLD]='\033[1m' [NC]='\033[0m' )
 
-echo_color() {
-    local color="${COLORS[$1]:-${COLORS[NC]}}"
-    local text="$2"
-    echo -e "${color}${text}${COLORS[NC]}"
+msg() {
+    local color="${COLORS[$1]:-${COLORS[NC]}}" text="$2"
+    [[ -t 1 ]] && echo -e "${color}${text}${COLORS[NC]}" || echo -e "$text"
 }
 
 display_spinner() {
-    local pid=$1
-    local hex_chars="0123456789ABCDEF"
-    local command_prompt="root@core:~$"
-    
-    while kill -0 $pid 2>/dev/null; do
-        local code_line=""
-        for ((i=0; i<16; i++)); do
-            code_line+="${hex_chars:RANDOM%16:1}"
-        done
-        printf "\r${COLORS[RED]}%s %s${COLORS[NC]}" "$command_prompt" "$code_line > "
+    local pid=$1 hex="0123456789ABCDEF"
+    while kill -0 "$pid" 2>/dev/null; do
+        local code=""
+        for i in {1..12}; do code+="${hex:RANDOM%16:1}"; done
+        printf "\r${COLORS[RED]}process@lab:~$ %s > ${COLORS[NC]}" "$code"
         sleep 0.1
     done
+    printf "\r%s\r" " "
 }
 
+# --- 3. EXECUTION ENGINE ---
 execute_function() {
-    temp_file=$(mktemp)
-    $selected_function > "$temp_file" 2>&1 &
-    local func_pid=$!
-    display_spinner $func_pid &
-    local spinner_pid=$!
-    tail -f "$temp_file" | while read -r line; do
-        log "INFO" "$line"
-    done &
-    local tail_pid=$!
-    wait $func_pid
-    kill $tail_pid
-    wait $spinner_pid
-    rm "$temp_file"
+    local func=$selected_function
+    echo -e "\n[$(date '+%Y-%m-%d %H:%M:%S')] START: $func" >> "$LOG_FILE"
+
+    # Background execution with IO redirection
+    $func >> "$LOG_FILE" 2>&1 &
+    local f_pid=$!
+    
+    display_spinner "$f_pid" &
+    spinner_pid=$!
+    
+    wait "$f_pid" && local status=0 || local status=$?
+    kill "$spinner_pid" 2>/dev/null || true
+
+    if [ $status -eq 0 ]; then
+        echo "[SUCCESS] $func" >> "$LOG_FILE"
+        return 0
+    else
+        echo "[FAILED] $func (Exit Code: $status)" >> "$LOG_FILE"
+        return $status
+    fi
 }
 
+# --- 4. NAVIGATION SYSTEM ---
 display_header() {
     clear
-    echo_color "RED" "╔═══════════════════════════════════════════╗"
-    echo_color "RED" "║               Lab. Control                ║"
-    echo_color "RED" "╚═══════════════════════════════════════════╝"
+    msg RED "╔═══════════════════════════════════════════╗"
+    msg RED "║          Lab. Control Dashboard           ║"
+    msg RED "╚═══════════════════════════════════════════╝"
     echo
 }
 
 load_menu_options() {
-    local file="$1"
-    local options=()
-    if [[ -f "$file" ]]; then
-        while IFS= read -r line; do
-            if [[ "$line" =~ ^([a-zA-Z0-9_-]+)[[:space:]]*\(\) ]]; then
-                options+=("${BASH_REMATCH[1]}")
-            fi
-        done < "$file"
-    fi
-    echo "${options[@]}"
+    grep -E '^[a-zA-Z0-9_-]+\(\)' "$1" | sed 's/().*//' | \
+    grep -vE '^(msg|echo_color|failure|display_spinner|execute_function)$'
 }
 
 submenu() {
     local setup_file="$1"
     local title=$(basename "$setup_file" .sh)
     source "$setup_file"
-    local options=($(load_menu_options "$setup_file"))
+    
     while true; do
         display_header
-        echo_color BLUE "${COLORS[BOLD]}$title:"
+        msg BLUE "${COLORS[BOLD]}$title Module Operations:"
+        local options=($(load_menu_options "$setup_file"))
+        
         for i in "${!options[@]}"; do
-            echo_color BOLD "$((i+1)). ${options[i]}"
+            msg BOLD "$((i+1)). ${options[i]}"
         done
-        echo_color RED "e. Return to Dashboard"
-        read -rp $'\n'"$(echo_color CYAN "Enter your choice: ")" choice
-        if [[ -z "$choice" ]]; then
-            echo_color RED "Please enter a valid choice."
-            sleep 1
-            continue
-        fi
+        msg RED "e. Back"
 
-        if [[ "$choice" =~ ^[0-9]+$ ]] && [ "$choice" -ge 1 ] && [ "$choice" -le "${#options[@]}" ]; then
+        read -rp $'\n'"$(msg CYAN "Choice: ")" choice
+        [[ "$choice" == "e" ]] && break
+
+        if [[ "$choice" =~ ^[0-9]+$ ]] && (( choice >= 1 && choice <= ${#options[@]} )); then
             selected_function="${options[$((choice-1))]}"
-            if [[ $(type -t "$selected_function") == function ]]; then
-                echo_color GREEN "Command starting..."
-                execute_function
-                echo_color GREEN "Command completed successfully!"
-            else
-                echo_color RED "Function $selected_function not found in $setup_file"
-            fi
-            read -rp $'\nPress Enter to continue...'
-        elif [[ "$choice" == "e" ]]; then
-            return
+            msg GREEN ">> Executing $selected_function..."
+            execute_function && msg GREEN "✓ Task completed." || msg RED "✗ Task failed."
+            read -rp "Press Enter to continue..."
         else
-            echo_color RED "Invalid choice. Try again."
-            sleep 1
+            msg RED "Invalid selection!"; sleep 1
         fi
     done
 }
 
 main_menu() {
+    [[ -f ".env" ]] && { set -a; source .env; set +a; }
+
     while true; do
         display_header
-        echo_color BLUE "${COLORS[BOLD]}Dashboard:"
-        local menu_files=($(find "$BASE_DIR/bin" -maxdepth 1 -type f -name "*.sh" | sort))
+        msg BLUE "${COLORS[BOLD]}Main Categories:"
+        local menu_files=($(find "$BASE_DIR/bin" -maxdepth 1 -name "*.sh" | sort))
+        
+        [[ ${#menu_files[@]} -eq 0 ]] && msg YELLOW "Warning: No .sh files found in bin/."
+
         for i in "${!menu_files[@]}"; do
-            local menu_name=$(basename "${menu_files[i]}" .sh)
-            echo_color BOLD "$((i+1)). $menu_name"
+            msg BOLD "$((i+1)). $(basename "${menu_files[i]}" .sh)"
         done
-        echo_color RED "e. Exit"
-        read -rp $'\n'"$(echo_color CYAN "Enter your choice: ")" choice
-        if [[ "$choice" =~ ^[0-9]+$ ]] && [ "$choice" -ge 1 ] && [ "$choice" -le ${#menu_files[@]} ]; then
+        msg RED "e. Exit"
+
+        read -rp $'\n'"$(msg CYAN "Choice: ")" choice
+        [[ "$choice" == "e" ]] && { msg CYAN "Goodbye!"; exit 0; }
+
+        if [[ "$choice" =~ ^[0-9]+$ ]] && (( choice >= 1 && choice <= ${#menu_files[@]} )); then
             submenu "${menu_files[$((choice-1))]}"
-        elif [[ "$choice" == "e" ]]; then
-            echo_color RED "Exiting..."
-            exit 0
         else
-            echo_color RED "Invalid choice. Try again."
-            sleep 1
+            msg RED "Invalid selection!"; sleep 1
         fi
     done
 }
 
+# Start Dashboard
 main_menu

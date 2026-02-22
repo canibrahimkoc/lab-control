@@ -1,126 +1,84 @@
+#!/bin/bash
+
+# Değişkenlerin tanımlı olduğundan emin olun (Örn: .env veya main script'ten gelir)
+git_dir="${git_dir:-/opt/lab-control}"
+
 git_update() {
+    # 1. ENV Dosyasını ve Dizileri Zorla Yükle
+    # Scriptin çalıştığı klasörü bul ve .env'i çek
+    local current_dir="$(dirname "$(realpath "$0")")"
+    if [ -f "$current_dir/.env" ]; then
+        source "$current_dir/.env"
+    elif [ -f "./.env" ]; then
+        source "./.env"
+    fi
+
+    # 2. Dizi Kontrolü (Hata ayıklama için echo eklendi)
+    if [[ ${#git_update[@]} -eq 0 ]]; then
+        echo "[!] ERROR: git_update array is still empty!"
+        echo "Current dir: $(pwd)"
+        return 1
+    fi
+
+    # 3. Döngüye Başla
     for repo in "${git_update[@]}"; do
-        if [ -d "${git_dir}/${repo}" ] && [ -d "${git_dir}/${repo}/.git" ]; then
-            project_name=$(basename "$repo")
-            echo "Processing project: $project_name"
-            cd "${git_dir}/${repo}" || continue
-            remote_url=$(git config --get remote.origin.url || echo "")
-            remote_title=$(basename "$(git rev-parse --show-toplevel)")
-            if [ -z "$remote_url" ]; then
-                echo "Git remote URL not set. Please run 'git remote add origin <URL>'."
-                continue
-            fi
+        target_path="${git_dir}/${repo}"
+        
+        if [ -d "$target_path/.git" ]; then
+            echo ">>> Updating: $repo"
+            cd "$target_path" || continue
+            
+            # Git işlemlerini yap
+            git fetch --all --prune --quiet
             current_branch=$(git symbolic-ref --short HEAD 2>/dev/null || echo "main")
-            if [ "$current_branch" = "HEAD" ]; then
-                current_branch="main"
+            
+            # Otomatik Commit Mantığı
+            if [[ -n $(git status --porcelain) ]]; then
+                echo " [+] Local changes found in $repo, committing..."
+                git add .
+                git commit -m "Auto-update $(date '+%Y-%m-%d %H:%M')" --quiet
             fi
-            echo "Updating Git repository..."
-            if git ls-remote --exit-code --heads origin "$current_branch" >/dev/null 2>&1; then
-                echo "Checking remote changes..."
-                if ! git fetch --quiet origin "$current_branch"; then
-                    echo "Failed to fetch from remote. Check the remote URL."
-                    continue
-                fi
-                LOCAL=$(git rev-parse HEAD 2>/dev/null || echo "")
-                REMOTE=$(git rev-parse "origin/$current_branch" 2>/dev/null || echo "")
-                if [ -z "$LOCAL" ] || [ -z "$REMOTE" ]; then
-                    echo "Failed to get branch information."
-                    continue
-                fi
-                if [ "$LOCAL" != "$REMOTE" ]; then
-                    echo "New updates available, pulling changes..."
-                    if ! git pull origin "$current_branch"; then
-                        echo "Failed to pull updates. Please check local changes."
-                        continue
-                    fi
-                fi
+
+            # Sync
+            echo " [↑] Syncing $current_branch..."
+            git pull origin "$current_branch" --rebase --quiet
+            if git push origin "$current_branch" 2>&1; then
+                echo " [✓] $repo updated successfully."
             else
-                echo "Remote branch not found. Creating initial commit..."
-                if ! git config user.name >/dev/null || ! git config user.email >/dev/null; then
-                    echo "Setting Git user information..."
-                    git config user.name "root"
-                    git config user.email "git@github.com"
-                fi
-                if ! git add .; then
-                    echo "Failed to add files."
-                    continue
-                fi
-                if ! git commit -m "Initial commit"; then
-                    echo "Failed to create initial commit."
-                    continue
-                fi
-                if ! git push -u origin "$current_branch"; then
-                    echo "Failed to push initial commit to remote repository."
-                    continue
-                fi
-                echo "Initial commit created and pushed successfully."
+                echo " [X] $repo push failed (Check SSH/Permissions)."
             fi
-            commit_count=$(git rev-list --count HEAD 2>/dev/null || echo "0")
-            major_version=$((commit_count / 100))
-            minor_version=$(( (commit_count / 10) % 10 ))
-            patch_version=$((commit_count % 10))
-            version="v${major_version}.${minor_version}.${patch_version}"
-            if [[ $(git status --porcelain) ]]; then
-                echo "Local changes detected..."
-                
-                if ! git config user.name >/dev/null || ! git config user.email >/dev/null; then
-                    echo "Setting Git user information..."
-                    git config user.name "root"
-                    git config user.email "git@github.com"
-                fi
-                if ! rm -f .git/index; then
-                    echo "Failed to remove old files."
-                    continue
-                fi
-                if ! git add .; then
-                    echo "Failed to add changes."
-                    continue
-                fi
-                if ! git commit -m "$version"; then
-                    echo "Failed to create commit."
-                    continue
-                fi
-                if ! git push origin "$current_branch"; then
-                    echo "Failed to push changes to remote repository."
-                    continue
-                fi
-                echo "Changes pushed successfully. New version: $remote_title > $version"
-            else
-                echo "No local changes. Current version: $remote_title > $version"
-            fi
-            cd - > /dev/null || return
-            echo "Finished processing: $project_name"
-            echo "----------------------------------------"
+            
+            cd - > /dev/null
         else
-            echo "Error: ${git_dir}/${repo} is not a valid Git repository."
+            echo " [!] Skipping: $repo (Not a git repository at $target_path)"
         fi
+        echo "----------------------------------------"
     done
 }
-
 git_clone() {
     for repo in "${git_clone[@]}"; do
         if [ ! -d "$git_dir/$repo" ]; then
-            echo "Cloning $repo..."
+            echo " [→] Cloning $repo..."
+            mkdir -p "$git_dir"
             git clone "git@github.com:canibrahimkoc/$repo.git" "$git_dir/$repo"
-            echo "$repo cloned successfully."
         else
-            echo "$repo already exists in $git_dir/. Skipping..."
+            echo " [i] $repo already exists. Skipping clone."
         fi
     done
 }
 
 git_restore() {
     for repo in "${git_restore[@]}"; do
-        echo "Cleaning $repo..."
-        if [ -d "$git_dir/$repo" ]; then
-            cd "$git_dir/$repo" || continue
-            find . -type d \( -name "node_modules" -o -name ".next" -o -name ".turbo" -o -name ".wrangler" -o -name ".vercel" -o -name ".contentlayer" \) -exec rm -rf {} +
-            # find . -type d \( -name ".git" -o -name ".github" \) -exec rm -rf {} +
-            # find . -type f -name ".gitignore" -exec rm -f {} +
-            # find . -type f -name "package-lock.json" -exec rm -f {} +
-            echo "$repo cleaned successfully."
+        target_path="$git_dir/$repo"
+        if [ -d "$target_path" ]; then
+            echo " [!] Cleaning build artifacts in $repo..."
+            cd "$target_path" || continue
+            # Kritik olmayan klasörleri temizle
+            rm -rf node_modules .next .turbo .wrangler .vercel .contentlayer
+            echo " [✓] $repo cleaned."
+            cd - > /dev/null
         else
-            echo "Error: Directory $git_dir/$repo not found."
+            echo " [X] Error: Directory $target_path not found."
         fi
     done
 }
