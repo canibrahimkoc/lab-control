@@ -8,7 +8,7 @@ LOG_DIR="$BASE_DIR/logs"
 LOG_FILE="$LOG_DIR/install.log"
 mkdir -p "$LOG_DIR"
 
-# Hata yakalama (Failure Trace)
+# Failure Trace
 failure() {
     local lineno=$1 cmd=$2
     [[ -n "${spinner_pid:-}" ]] && kill "$spinner_pid" 2>/dev/null || true
