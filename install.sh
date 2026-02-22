@@ -70,10 +70,13 @@ execute_function() {
 
     if is_interactive "$func"; then
         msg YELLOW ">> Running interactive tool. Press Ctrl+C to stop.\n"
-        set +e
-        $func
-        local status=$?
-        set -e
+        set +e # Hata yakalamayı duraklat
+        
+        # Değişen Kısım: Çıktıyı HEM ekrana (terminale) HEM DE log dosyasına (tee ile) gönder
+        $func 2>&1 | tee -a "$LOG_FILE"
+        local status=${PIPESTATUS[0]} # tee kullandığımız için asıl fonksiyonun çıkış kodunu alıyoruz
+        
+        set -e # Hata yakalamayı tekrar aç
         echo "[FINISHED] $func (Exit Code: $status)" >> "$LOG_FILE"
         return 0
     fi
