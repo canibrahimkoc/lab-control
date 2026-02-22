@@ -238,12 +238,6 @@ mariadb_backup() {
 
 # --- [ GITHUB FUNCTIONS ] ---
 git_update() {
-    # Dizi boş mu diye kontrol et
-    if [[ ${#GIT_UPDATE_REPOS[@]} -eq 0 ]]; then
-        echo "HATA: Repo listesi boş! .env içindeki GIT_UPDATE_REPOS tanımlamasını kontrol et."
-        return 1
-    fi
-    
     for repo in "${GIT_UPDATE_REPOS[@]}"; do
         if [ -d "${GIT_DIR}/${repo}" ] && [ -d "${GIT_DIR}/${repo}/.git" ]; then
             project_name=$(basename "$repo")
