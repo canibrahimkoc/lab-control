@@ -126,7 +126,7 @@ sys_typescript() {
     
     if ! command -v node &>/dev/null; then
         curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | bash
-        . "$NVM_DIR/nvm.sh" && nvm install 20
+        . "$NVM_DIR/nvm.sh" && nvm install 22
         npm install -g npm pnpm yarn nodemon
         grep -q "NODE_OPTIONS" ~/.bashrc || echo 'export NODE_OPTIONS="--max-old-space-size=32096"' >> ~/.bashrc
     fi
@@ -214,21 +214,99 @@ mariadb_backup() {
 
 git_update() {
     for repo in "${GIT_UPDATE_REPOS[@]}"; do
-        local target="$GIT_DIR/$repo"
-        if [ -d "$target/.git" ]; then
-            cd "$target" || continue
-            local branch=$(git symbolic-ref --short HEAD 2>/dev/null || echo "main")
-            [ "$branch" = "HEAD" ] && branch="main"
-            
-            git fetch --quiet origin "$branch" || continue
-            git pull origin "$branch" || true
-
+        if [ -d "${GIT_DIR}/${repo}" ] && [ -d "${GIT_DIR}/${repo}/.git" ]; then
+            project_name=$(basename "$repo")
+            echo "Processing project: $project_name"
+            cd "${GIT_DIR}/${repo}" || continue
+            remote_url=$(git config --get remote.origin.url || echo "")
+            remote_title=$(basename "$(git rev-parse --show-toplevel)")
+            if [ -z "$remote_url" ]; then
+                echo "Git remote URL not set. Please run 'git remote add origin <URL>'."
+                continue
+            fi
+            current_branch=$(git symbolic-ref --short HEAD 2>/dev/null || echo "main")
+            if [ "$current_branch" = "HEAD" ]; then
+                current_branch="main"
+            fi
+            echo "Updating Git repository..."
+            if git ls-remote --exit-code --heads origin "$current_branch" >/dev/null 2>&1; then
+                echo "Checking remote changes..."
+                if ! git fetch --quiet origin "$current_branch"; then
+                    echo "Failed to fetch from remote. Check the remote URL."
+                    continue
+                fi
+                LOCAL=$(git rev-parse HEAD 2>/dev/null || echo "")
+                REMOTE=$(git rev-parse "origin/$current_branch" 2>/dev/null || echo "")
+                if [ -z "$LOCAL" ] || [ -z "$REMOTE" ]; then
+                    echo "Failed to get branch information."
+                    continue
+                fi
+                if [ "$LOCAL" != "$REMOTE" ]; then
+                    echo "New updates available, pulling changes..."
+                    if ! git pull origin "$current_branch"; then
+                        echo "Failed to pull updates. Please check local changes."
+                        continue
+                    fi
+                fi
+            else
+                echo "Remote branch not found. Creating initial commit..."
+                if ! git config user.name >/dev/null || ! git config user.email >/dev/null; then
+                    echo "Setting Git user information..."
+                    git config user.name "root"
+                    git config user.email "git@github.com"
+                fi
+                if ! git add .; then
+                    echo "Failed to add files."
+                    continue
+                fi
+                if ! git commit -m "Initial commit"; then
+                    echo "Failed to create initial commit."
+                    continue
+                fi
+                if ! git push -u origin "$current_branch"; then
+                    echo "Failed to push initial commit to remote repository."
+                    continue
+                fi
+                echo "Initial commit created and pushed successfully."
+            fi
+            commit_count=$(git rev-list --count HEAD 2>/dev/null || echo "0")
+            major_version=$((commit_count / 100))
+            minor_version=$(( (commit_count / 10) % 10 ))
+            patch_version=$((commit_count % 10))
+            version="v${major_version}.${minor_version}.${patch_version}"
             if [[ $(git status --porcelain) ]]; then
-                git add .
-                git commit -m "Auto-update $(date +%F)"
-                git push origin "$branch"
+                echo "Local changes detected..."
+                
+                if ! git config user.name >/dev/null || ! git config user.email >/dev/null; then
+                    echo "Setting Git user information..."
+                    git config user.name "root"
+                    git config user.email "git@github.com"
+                fi
+                if ! rm -f .git/index; then
+                    echo "Failed to remove old files."
+                    continue
+                fi
+                if ! git add .; then
+                    echo "Failed to add changes."
+                    continue
+                fi
+                if ! git commit -m "$version"; then
+                    echo "Failed to create commit."
+                    continue
+                fi
+                if ! git push origin "$current_branch"; then
+                    echo "Failed to push changes to remote repository."
+                    continue
+                fi
+                echo "Changes pushed successfully. New version: $remote_title > $version"
+            else
+                echo "No local changes. Current version: $remote_title > $version"
             fi
             cd - > /dev/null || return
+            echo "Finished processing: $project_name"
+            echo "----------------------------------------"
+        else
+            echo "Error: ${GIT_DIR}/${repo} is not a valid Git repository."
         fi
     done
 }
@@ -236,17 +314,29 @@ git_update() {
 git_clone() {
     for repo in "${GIT_CLONE_REPOS[@]}"; do
         if [ ! -d "$GIT_DIR/$repo" ]; then
+            echo "Cloning $repo..."
             git clone "git@github.com:canibrahimkoc/$repo.git" "$GIT_DIR/$repo"
+            echo "$repo cloned successfully."
         else
-            msg "$YELLOW" "$repo zaten mevcut. Atlanıyor..."
+            echo "$repo already exists in $GIT_DIR/. Skipping..."
         fi
     done
 }
 
 git_restore() {
     for repo in "${GIT_RESTORE_REPOS[@]}"; do
-        [ -d "$GIT_DIR/$repo" ] && find "$GIT_DIR/$repo" -type d \( -name "node_modules" -o -name ".next" -o -name ".turbo" -o -name ".wrangler" -o -name ".vercel" \) -exec rm -rf {} +
-        msg "$GREEN" "$repo temizlendi."
+        echo "Cleaning $repo..."
+        if [ -d "$GIT_DIR/$repo" ]; then
+            cd "$GIT_DIR/$repo" || continue
+            find . -type d \( -name "node_modules" -o -name ".next" -o -name ".turbo" -o -name ".wrangler" -o -name ".vercel" -o -name ".contentlayer" \) -exec rm -rf {} +
+            # find . -type d \( -name ".git" -o -name ".github" \) -exec rm -rf {} +
+            # find . -type f -name ".gitignore" -exec rm -f {} +
+            # find . -type f -name "package-lock.json" -exec rm -f {} +
+            echo "$repo cleaned successfully."
+            cd - > /dev/null || true
+        else
+            echo "Error: Directory $GIT_DIR/$repo not found."
+        fi
     done
 }
 
