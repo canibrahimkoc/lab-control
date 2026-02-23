@@ -32,7 +32,9 @@ NC='\033[0m'
 
 trap 'echo -e "\n${RED}[!] CRITICAL ERROR at line $LINENO: $BASH_COMMAND${NC}"; tail -n 5 "$LOG_FILE"; exit 1' ERR
 
-msg() { echo -e "${1}${2}${NC}"; }
+msg() {
+    echo -e "${1}${2}${NC}"
+}
 
 display_header() {
     clear
@@ -44,21 +46,39 @@ display_header() {
 
 execute() {
     local cmd="$1"
-    echo -e "\n[$(date '+%Y-%m-%d %H:%M:%S')] START: $cmd" >> "$LOG_FILE"
-    msg "$YELLOW" ">> Çalıştırılıyor: $cmd\n"
-    
+    local timestamp
+    timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+
+    {
+        echo -e "\n-------------------------------------------"
+        echo "[$timestamp] STARTED: $cmd"
+        echo -e "-------------------------------------------\n"
+    } >> "$LOG_FILE"
+
+    msg "$YELLOW" ">> Çalıştırılıyor: $cmd"
+
     set +e
-    $cmd 2>&1 | tee -a "$LOG_FILE"
+    $cmd 2>&1 | tee -a >(sed 's/\x1b\[[0-9;]*m//g' >> "$LOG_FILE")
     local status=${PIPESTATUS[0]}
     set -e
 
+    timestamp=$(date '+%Y-%m-%d %H:%M:%S') 
     if [ "$status" -eq 0 ]; then
-        echo "[SUCCESS] $cmd" >> "$LOG_FILE"
         msg "$GREEN" "✓ İşlem başarıyla tamamlandı."
+        {
+            echo -e "\n-------------------------------------------"
+            echo "[$timestamp] SUCCESS: $cmd"
+            echo -e "-------------------------------------------\n"
+        } >> "$LOG_FILE"
     else
-        echo "[FAILED] $cmd (Exit Code: $status)" >> "$LOG_FILE"
         msg "$RED" "✗ İşlem başarısız oldu (Hata Kodu: $status)."
+        {
+            echo -e "\n-------------------------------------------"
+            echo "[$timestamp] FAILED: $cmd (Exit Code: $status)"
+            echo -e "-------------------------------------------\n"
+        } >> "$LOG_FILE"
     fi
+
     read -rp "Devam etmek için Enter'a basın..."
 }
 
@@ -81,8 +101,13 @@ sys_config() { msg "$BLUE" "Sistem konfigürasyonları uygulandı."; }
 
 sys_alias() {
     local bsh="$HOME/.bashrc"
-    grep -q "alias lab=" "$bsh" || echo "alias lab='$BASE_DIR/install.sh'" >> "$bsh"
-    grep -q "alias logs=" "$bsh" || echo "alias logs='journalctl -f'" >> "$bsh"
+
+    if ! grep -q "alias lab=" "$bsh"; then
+        echo "alias lab='source $BASE_DIR/install.sh'" >> "$bsh"
+    else
+        sed -i "s|alias lab=.*|alias lab='source $BASE_DIR/install.sh'|g" "$bsh"
+    fi
+    msg "$BLUE" "Alias güncellendi: 'lab' komutu artık anlık değişiklikleri yansıtacak."
 }
 
 sys_tools() {
@@ -110,13 +135,33 @@ sys_typescript() {
 sys_python() {
     export PYENV_ROOT="$HOME/.pyenv"
     export PATH="$PYENV_ROOT/bin:$PATH"
-    command -v pyenv >/dev/null && eval "$(pyenv init -)"
-
-    if ! command -v python3.11 &>/dev/null; then
-        [ ! -d "$PYENV_ROOT" ] && curl https://pyenv.run | bash
-        pyenv install 3.11 && pyenv global 3.11
-        python -m ensurepip --upgrade && pip install --upgrade pip
+    
+    if [ ! -d "$PYENV_ROOT" ]; then
+        msg "$YELLOW" "pyenv yükleniyor..."
+        curl https://pyenv.run | bash
     fi
+
+    if ! grep -q "PYENV_ROOT" ~/.bashrc; then
+        {
+            echo 'export PYENV_ROOT="$HOME/.pyenv"'
+            echo '[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"'
+            echo 'eval "$(pyenv init -)"'
+        } >> ~/.bashrc
+    fi
+
+    eval "$(pyenv init -)"
+    
+    if ! pyenv versions | grep -q "3.11"; then
+        msg "$YELLOW" "Python 3.11 kuruluyor..."
+        pyenv install 3.11
+    fi
+
+    pyenv global 3.11
+    pyenv rehash
+    hash -r
+    
+    local ver=$(python --version 2>&1)
+    msg "$GREEN" "Aktif Sürüm: $ver"
 }
 
 sys_dart() {
