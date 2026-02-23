@@ -3,9 +3,46 @@
 set -euo pipefail
 
 BASE_DIR="$(dirname "$(realpath "$0")")"
-LOG_DIR="$BASE_DIR/logs"
+GIT_DIR="/opt"
+LOG_DIR="$BASE_DIR/log"
+BACKUP_DIR="$BASE_DIR/backup"
+
+GIT_UPDATE_REPOS=(
+    "lab-control"
+    "ck-works"
+    "dev-lab"
+    "not-found"
+    "merovingian-ai"
+    "felinance-api"
+)
+
+GIT_CLONE_REPOS=(
+    "lab-control"
+    "ck-works"
+    "dev-lab"
+    "not-found"
+    "merovingian-ai"
+    "felinance-api"
+)
+
+GIT_RESTORE_REPOS=(
+    "ck-works"
+)
+
+SQLITE_BACKUP_SRC=(
+    "/root/.n8n/database.sqlite"
+)
+
+PG_DB_USER="kullanici_adin"
+PG_DB_PASSWORD="sifren"
+PG_DB_NAME="veritabani_adin"
+
+MARIA_DB_USER="kullanici_adin"
+MARIA_DB_PASSWORD="sifren"
+MARIA_DB_NAME="veritabani_adin"
+
 LOG_FILE="$LOG_DIR/install.log"
-mkdir -p "$LOG_DIR"
+mkdir -p "$LOG_DIR" "$BACKUP_DIR"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -47,7 +84,7 @@ execute() {
     read -rp "Devam etmek için Enter'a basın..."
 }
 
-# --- YARDIMCI FONKSİYONLAR ---
+# =========================================================================
 
 sys_auto_install() {
     for cmd in sys_update sys_config sys_alias sys_tools sys_typescript sys_python sys_dart sys_github_setup; do 
@@ -66,7 +103,7 @@ sys_config() { msg "$BLUE" "Sistem konfigürasyonları uygulandı."; }
 
 sys_alias() {
     local bsh="$HOME/.bashrc"
-    grep -q "alias lab=" "$bsh" || echo "alias lab='/opt/lab-control/install.sh'" >> "$bsh"
+    grep -q "alias lab=" "$bsh" || echo "alias lab='$BASE_DIR/install.sh'" >> "$bsh"
     grep -q "alias logs=" "$bsh" || echo "alias logs='journalctl -f'" >> "$bsh"
 }
 
@@ -129,25 +166,27 @@ sys_github_setup() {
 }
 
 sqlite_backup() {
-    mkdir -p "${BACKUP_DIR:-./backup}"
     local timestamp=$(date +"%Y-%m-%d_%H-%M-%S")
     for file in "${SQLITE_BACKUP_SRC[@]}"; do
         if [ -f "$file" ]; then
-            cp "$file" "${BACKUP_DIR:-./backup}/$(basename "${file%.*}")_$timestamp.${file##*.}"
+            cp "$file" "$BACKUP_DIR/$(basename "${file%.*}")_$timestamp.${file##*.}"
+            msg "$GREEN" "Yedeklendi: $file"
+        else
+            msg "$YELLOW" "Bulunamadı: $file"
         fi
     done
 }
 
 postgresql_backup() {
-    mkdir -p "${BACKUP_DIR:-./backup}"
-    local file="${BACKUP_DIR:-./backup}/${PG_DB_NAME}_$(date +"%Y-%m-%d_%H-%M-%S").sql"
+    local file="$BACKUP_DIR/${PG_DB_NAME}_$(date +"%Y-%m-%d_%H-%M-%S").sql"
     sudo -u postgres pg_dump -U "$PG_DB_USER" -d "$PG_DB_NAME" > "$file"
+    msg "$GREEN" "PostgreSQL Yedeklendi: $file"
 }
 
 mariadb_backup() {
-    mkdir -p "${BACKUP_DIR:-./backup}"
-    local file="${BACKUP_DIR:-./backup}/${MARIA_DB_NAME}_$(date +"%Y-%m-%d_%H-%M-%S").sql"
+    local file="$BACKUP_DIR/${MARIA_DB_NAME}_$(date +"%Y-%m-%d_%H-%M-%S").sql"
     mysqldump -u "$MARIA_DB_USER" -p"$MARIA_DB_PASSWORD" "$MARIA_DB_NAME" > "$file"
+    msg "$GREEN" "MariaDB Yedeklendi: $file"
 }
 
 git_update() {
@@ -173,13 +212,18 @@ git_update() {
 
 git_clone() {
     for repo in "${GIT_CLONE_REPOS[@]}"; do
-        [ ! -d "$GIT_DIR/$repo" ] && git clone "git@github.com:canibrahimkoc/$repo.git" "$GIT_DIR/$repo"
+        if [ ! -d "$GIT_DIR/$repo" ]; then
+            git clone "git@github.com:canibrahimkoc/$repo.git" "$GIT_DIR/$repo"
+        else
+            msg "$YELLOW" "$repo zaten mevcut. Atlanıyor..."
+        fi
     done
 }
 
 git_restore() {
     for repo in "${GIT_RESTORE_REPOS[@]}"; do
         [ -d "$GIT_DIR/$repo" ] && find "$GIT_DIR/$repo" -type d \( -name "node_modules" -o -name ".next" -o -name ".turbo" -o -name ".wrangler" -o -name ".vercel" \) -exec rm -rf {} +
+        msg "$GREEN" "$repo temizlendi."
     done
 }
 
@@ -189,7 +233,7 @@ tracker_kernel_dmesg()    { dmesg --follow; }
 tracker_network_port()    { ss -tuln; }
 tracker_all_connect()     { ss -tnp; }
 
-# --- MENÜ SİSTEMİ ---
+# =========================================================================
 
 get_module_functions() {
     case "$1" in
@@ -222,9 +266,6 @@ submenu() {
 }
 
 main_menu() {
-    [[ -f "$BASE_DIR/.env" ]] && source "$BASE_DIR/.env" || msg "$YELLOW" "UYARI: .env bulunamadı ($BASE_DIR/.env)"
-    sleep 1
-
     local modules=("System" "Backup" "Github" "Tracker")
     while true; do
         display_header
