@@ -59,36 +59,20 @@ get_module_functions() {
     esac
 }
 
-is_interactive() {
-    [[ "$1" =~ ^(tracker_journalctl|tracker_network_tcpdump|tracker_kernel_dmesg|tracker_network_port|tracker_all_connect|git_update|git_clone|git_restore)$ ]]
-}
-
 # --- 4. EXECUTION ENGINE ---
 execute_function() {
     local func=$selected_function
     echo -e "\n[$(date '+%Y-%m-%d %H:%M:%S')] START: $func" >> "$LOG_FILE"
-
-    if is_interactive "$func"; then
-        msg YELLOW ">> Running interactive tool. Press Ctrl+C to stop.\n"
-        set +e # Hata yakalamayı duraklat
-        
-        # Değişen Kısım: Çıktıyı HEM ekrana (terminale) HEM DE log dosyasına (tee ile) gönder
-        $func 2>&1 | tee -a "$LOG_FILE"
-        local status=${PIPESTATUS[0]} # tee kullandığımız için asıl fonksiyonun çıkış kodunu alıyoruz
-        
-        set -e # Hata yakalamayı tekrar aç
-        echo "[FINISHED] $func (Exit Code: $status)" >> "$LOG_FILE"
-        return 0
-    fi
-
-    $func >> "$LOG_FILE" 2>&1 &
-    local f_pid=$!
     
-    display_spinner "$f_pid" &
-    spinner_pid=$!
+    msg YELLOW ">> İşlem başlatıldı, çıktılar ekrana ve log dosyasına yazılıyor...\n"
     
-    wait "$f_pid" && local status=0 || local status=$?
-    kill "$spinner_pid" 2>/dev/null || true
+    set +e # Hata yakalamayı geçici durdur
+    
+    # Hem ekrana bas hem log dosyasına yaz
+    $func 2>&1 | tee -a "$LOG_FILE"
+    local status=${PIPESTATUS[0]}
+    
+    set -e # Hata yakalamayı tekrar aç
 
     if [ $status -eq 0 ]; then
         echo "[SUCCESS] $func" >> "$LOG_FILE"
