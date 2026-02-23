@@ -9,31 +9,10 @@ BACKUP_DIR="$BASE_DIR/backup"
 LOG_FILE="$LOG_DIR/install.log"
 mkdir -p "$LOG_DIR" "$BACKUP_DIR"
 
-GIT_UPDATE_REPOS=(
-    "lab-control"
-    "ck-works"
-    "dev-lab"
-    "not-found"
-    "merovingian-ai"
-    "felinance-api"
-)
-
-GIT_CLONE_REPOS=(
-    "lab-control"
-    "ck-works"
-    "dev-lab"
-    "not-found"
-    "merovingian-ai"
-    "felinance-api"
-)
-
-GIT_RESTORE_REPOS=(
-    "ck-works"
-)
-
-SQLITE_BACKUP_SRC=(
-    "/root/.n8n/database.sqlite"
-)
+GIT_UPDATE_REPOS=("lab-control" "ck-works" "dev-lab" "not-found" "merovingian-ai" "felinance-api")
+GIT_CLONE_REPOS=("lab-control" "ck-works" "dev-lab" "not-found" "merovingian-ai" "felinance-api")
+GIT_RESTORE_REPOS=("ck-works")
+SQLITE_BACKUP_SRC=("/root/.n8n/database.sqlite")
 
 PG_DB_USER="kullanici_adin"
 PG_DB_PASSWORD="sifren"
