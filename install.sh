@@ -4,8 +4,10 @@ set -euo pipefail
 
 BASE_DIR="$(dirname "$(realpath "$0")")"
 GIT_DIR="/opt"
-LOG_DIR="$BASE_DIR/log"
+LOG_DIR="$BASE_DIR/logs"
 BACKUP_DIR="$BASE_DIR/backup"
+LOG_FILE="$LOG_DIR/install.log"
+mkdir -p "$LOG_DIR" "$BACKUP_DIR"
 
 GIT_UPDATE_REPOS=(
     "lab-control"
@@ -40,9 +42,6 @@ PG_DB_NAME="veritabani_adin"
 MARIA_DB_USER="kullanici_adin"
 MARIA_DB_PASSWORD="sifren"
 MARIA_DB_NAME="veritabani_adin"
-
-LOG_FILE="$LOG_DIR/install.log"
-mkdir -p "$LOG_DIR" "$BACKUP_DIR"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
