@@ -1,8 +1,8 @@
 ## Lab. Control
 
-Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum is simply dummy text of the printing and typesetting industry.
+Lab Control is a comprehensive, interactive Bash-based dashboard designed to streamline the setup, management, and monitoring of development environments. It automates system dependency installations, manages Git repositories across multiple projects, and handles database backups (PostgreSQL, MariaDB, SQLite) through a unified, easy-to-use interface.
 
-- Node.js >= 20.10
+- Node.js >= 22.22
 - Npm >= 10.9
 - Python >= 3.11
 - Dart >= 3.5
@@ -12,36 +12,39 @@ Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem
 
 #### 🛠️ Install
 
-Lorem Ipsum is simply dummy text of the printing and typesetting industry.
+First, clone the repository to your local machine or target server:
 
 ```bash
 git clone https://github.com/canibrahimkoc/lab-control
-```
 
-Lorem Ipsum is simply dummy text of the printing.
+Make the script executable and launch the setup process. This will install necessary system tools and configure the global `lab` alias:
 
 ```bash
 chmod +x install.sh && ./install.sh
 ```
 
-#### 🔑 WSL
+#### 🔑 WSL (Windows Subsystem for Linux) Setup
 
-Lorem Ipsum is simply dummy text of the printing and typesetting industry.
+If you are running this environment on Windows, follow these steps to perform a clean installation of Debian on WSL:
 
 ```bash
 wsl --shutdown; wsl --unregister Debian; wsl --install -d Debian
-wsl --setdefault Debian; wsl -d Debian
+wsl --setdefault Debian; wsl -d Debian -u root
 ```
-Lorem Ipsum is simply dummy text of the printing and typesetting industry.
+
+Configure WSL to enable `systemd` (required for background services) and set the default user to `root`:
+
 ```bash
-echo -e "[interop]\nenabled = false\nappendWindowsPath = false\n\n[user]\ndefault = root\n\n[boot]\nsystemd = true" | sudo tee /etc/wsl.conf > /dev/null
+echo -e "[interop]\nenabled = true\nappendWindowsPath = true\n\n[user]\ndefault = root\n\n[boot]\nsystemd = true" | sudo tee /etc/wsl.conf > /dev/null
 ```
-Lorem Ipsum is simply dummy text of the printing and typesetting industry.
+
+Apply the changes by shutting down WSL and verifying that `systemd` is active:
 
 ```bash
 wsl --shutdown; wsl -d Debian --cd /opt -- systemctl status
 ```
-Lorem Ipsum is simply dummy text of the printing and typesetting industry.
+
+Finally, install essential dependencies, clone the repository directly into the `/opt` directory, and execute the installation script:
 
 ```bash
 apt-get install -y bash git && git clone https://github.com/canibrahimkoc/lab-control /opt/lab-control && cd /opt/lab-control && chmod +x install.sh && ./install.sh
@@ -49,31 +52,31 @@ apt-get install -y bash git && git clone https://github.com/canibrahimkoc/lab-co
 
 #### 📦 Control
 
-Lorem Ipsum is simply dummy text of the printing and typesetting industry.
+Launch the interactive Lab Control dashboard to navigate through System, Backup, Github, and Tracker modules:
 
 ```bash
-  sudo lab
+sudo lab
 ```
 
 #### 📦 Build
 
-Lorem Ipsum is simply dummy text of the printing and typesetting industry.
+Trigger the setup and configuration process for your system environments and development tools:
 
 ```bash
-  sudo lab build
+sudo lab build
 ```
 
 #### 🔄 Update
 
-Lorem Ipsum is simply dummy text of the printing and typesetting industry.
+Fetch the latest changes for all registered Git repositories, update branches automatically, and upgrade system packages:
 
 ```bash
-  sudo lab update
+sudo lab update
 ```
 
 #### 🛡️ Backup
 
-Lorem Ipsum is simply dummy text of the printing and typesetting industry.
+Instantly generate timestamped backups for your SQLite, PostgreSQL, and MariaDB databases, safely storing them in the `backup/` directory:
 
 ```bash
 sudo lab backup
@@ -81,7 +84,7 @@ sudo lab backup
 
 #### 🗑️ Uninstall
 
-Lorem Ipsum is simply dummy text of the printing and typesetting industry.
+Clean up environments and remove Lab Control configurations, aliases, and dependencies from your system:
 
 ```bash
 sudo lab remove
@@ -89,8 +92,8 @@ sudo lab remove
 
 #### 📋 Contributing
 
-Lorem Ipsum is simply dummy text of the printing and 'typesetting industry'. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged.
- 
+Contributions, issues, and feature requests are welcome! If you want to improve Lab Control, please fork the repository, create a feature branch, and submit a pull request. Make sure your shell scripts are well-documented and gracefully handle errors.
+
 &nbsp;⢠⣿⣷⡀⠀⢀⣼⣿⡄  </br>
 &nbsp;⢸⣿⣿⡇⠀⢸⣿⣿⡇  </br>
 &nbsp;⠀⢿⣿⡇⣀⢸⣿⡿⠀  </br>
