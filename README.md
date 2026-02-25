@@ -16,6 +16,7 @@ First, clone the repository to your local machine or target server:
 
 ```bash
 git clone https://github.com/canibrahimkoc/lab-control
+```
 
 Make the script executable and launch the setup process. This will install necessary system tools and configure the global `lab` alias:
 
