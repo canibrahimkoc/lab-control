@@ -112,12 +112,16 @@ sys_alias() {
 
 sys_tools() {
     export DEBIAN_FRONTEND=noninteractive
-    apt-get install -y bash sudo htop openssl openssh-server git wget curl jq tcpdump ffmpeg build-essential \
+    apt-get install -y bash sudo htop fail2ban openssl openssh-server git wget curl jq tcpdump ffmpeg build-essential \
         libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev llvm libncurses5-dev \
         libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev \
         libgdbm-dev libnss3-dev dpkg-dev gcc gnupg libbluetooth-dev libdb-dev libexpat1-dev \
         uuid-dev pkg-config libpq-dev python3-venv python3-pip postgresql postgresql-contrib redis-server
     ldconfig
+    # Fail2ban activate
+    apt update && apt install -y fail2ban
+    systemctl enable --now fail2ban
+    # fail2ban-client status sshd 
 }
 
 sys_typescript() {
