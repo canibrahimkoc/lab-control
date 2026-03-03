@@ -155,12 +155,13 @@ sys_python() {
 
     eval "$(pyenv init -)"
     
-    if ! pyenv versions | grep -q "3.13"; then
-        msg "$YELLOW" "Python 3.13 kuruluyor..."
-        pyenv install 3.13
+    if ! pyenv versions | grep -q "3.12"; then
+        msg "$YELLOW" "Python 3.12 kuruluyor..."
+        pyenv install 3.12
     fi
 
-    pyenv global 3.13
+    pyenv global 3.12
+    python3.12 -m pip install --upgrade pip
     pyenv rehash
     hash -r
     
