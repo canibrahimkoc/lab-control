@@ -120,6 +120,7 @@ sys_tools() {
     ldconfig
     # Fail2ban activate
     apt update && apt install -y fail2ban
+    echo -e "[sshd]\nenabled = true\nport = ssh\nfilter = sshd\nlogpath = /var/log/auth.log\nfindtime = 900\nmaxretry = 5\nbantime = 86400" | sudo tee /etc/fail2ban/jail.local
     systemctl enable --now fail2ban
     # fail2ban-client status sshd 
 }
@@ -191,6 +192,7 @@ sys_github_setup() {
         ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
     fi
     ssh -T git@github.com 2>&1 | head -n 1 || true
+    #rm /root/.ssh/id_rsa.pub
 }
 
 sqlite_backup() {
